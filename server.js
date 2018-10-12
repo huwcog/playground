@@ -1,7 +1,7 @@
 var express    = require('express');        // call express
 var app        = express();                 // define our app using express
 
-var port = process.env.PORT || 8080;        // set our port
+var port = process.env.PORT || 3001;        // set our port
 
 var router = express.Router();              // get an instance of the express Router
 
