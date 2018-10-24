@@ -1,21 +1,24 @@
-var express    = require('express');        // call express
-var app        = express();                 // define our app using express
+require('dotenv').config()
+const express = require('express')
+const app = express()
+const MongoClient = require('mongodb').MongoClient
+const port = process.env.PORT || 3001
+const bodyParser = require('body-parser')
+let db
 
-var port = process.env.PORT || 3001;        // set our port
+MongoClient.connect(process.env.DATABASE_URL, { useNewUrlParser: true }, (err, client) => {
+    if (err) return console.log(err)
+    db = client.db('things')
+    console.log("DB connected")
+})
 
-var router = express.Router();              // get an instance of the express Router
-
-router.get('/', function(req, res) {
-    res.json({ message: 'hooray! welcome to our api!' });   
-});
-
-app.post('/multi/InvCont/findByContainerRefs', function(req, res) {
-    console.log(req.headers);
-    res.json({ message: 'hooray! welcome to our api!' });  
-});
-
-router.get('/image', function(req, res) {
-    var fileName = req.query.name;
+let router = express.Router()
+router.use(bodyParser.json())
+router.get('/', (req, res) => {
+    res.json({ message: 'hooray! welcome to our api!' })
+})
+router.get('/image', (req, res) => {
+    let fileName = req.query.name
     res.sendFile(
         fileName,
         {
@@ -25,10 +28,23 @@ router.get('/image', function(req, res) {
                 "Content-Type": "image/png"
             }
         }
-    );
-});
+    )
+})
+router.post('/todos', (req, res) => {
+    console.log(req.body)
+    db.collection('todos').insertOne(req.body, (err, result) => {
+        if (err) return console.log(err)
+        console.log('todo saved')
+        res.json(result.ops[0])
+    })
+})
+app.use('/api', router)
+app.use(bodyParser.json())
 
-app.use('/api', router);
+app.post('/multi/InvCont/findByContainerRefs', function (req, res) {
+    console.log(req.headers)
+    res.json({ headers: req.headers })
+})
 
-app.listen(port);
-console.log('Magic happens on port ' + port);
+app.listen(port)
+console.log('Magic happens on port ' + port)
